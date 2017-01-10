@@ -12,17 +12,22 @@ import time
 
 now = time.time()
 max_age = 60
+ignore_files = ['Thumbs.db', '.DS_Store']
+
 
 class Node(object):
+    """Node in a tree of directories."""
 
     def __init__(self, name=None, age=None, num_files=0, parent=None):
+        """Create directory node."""
         self.name = name
         self.age = age
-        self.num_files = num_files
+        self.num_files = num_files  # num files and dirs not including self
         self.parent = parent
         self.children = []
 
     def add_child(self, node):
+        """Add node as child of this node."""
         node.parent = self
         self.children.append(node)
         return(node)
@@ -55,6 +60,7 @@ class Node(object):
         visit(self)
 
     def __str__(self):
+        """Human readable string representation."""
         if (self.age is None):
             age_str = 'UNKNOWN AGE'
         elif (self.age == max_age):
@@ -91,7 +97,7 @@ def scan_dir(root, max_age=999999):
                 continue
             num_files += 1
             filename_age = age(os.path.join(path, filename), max_age)
-            if (filename_age<path_age):
+            if (filename_age < path_age):
                 path_age = filename_age
         rel_path = os.path.relpath(path, root)
         node = Node(rel_path, age=path_age, num_files=num_files)
@@ -101,12 +107,15 @@ def scan_dir(root, max_age=999999):
         else:
             last_node.add(node)
         last_node = node
-        #print("# %s %d" % (rel_path, path_age))
+        # print("# %s %d" % (rel_path, path_age))
     return(root_node)
 
+
 def print_node(node):
-    #if (node.age < max_age):
+    """Print node."""
+    # if (node.age < max_age):
     print(str(node))
+
 
 def print_tree(root_node, prefix=''):
     """Pre-order print of tree."""
@@ -114,10 +123,10 @@ def print_tree(root_node, prefix=''):
 
 
 def collapse_node(node):
+    """Collapse children into this node if older."""
     new_children = []
     for child in node.children:
-        if (len(child.children) == 0 and
-            child.age >= node.age):
+        if (len(child.children) == 0 and child.age >= node.age):
             # combine child into node
             node.num_files += (child.num_files + 1)
         else:
@@ -125,15 +134,13 @@ def collapse_node(node):
     node.children = new_children
 
 
-ignore_files = [ 'Thumbs.db', '.DS_Store' ]
 for path in sys.argv[1:]:
     print("Scanning %s" % (path))
     root_node = scan_dir(path, max_age)
     if (root_node is None):
         print("No included files in %s" % (path))
     else:
-        #print_tree(root_node)
+        # print_tree(root_node)
         root_node.postorder(collapse_node)
         print("After collapsing less recently updated sub-dirs (dirs with no changes in %d omitted):\n" % (max_age))
         print_tree(root_node)
-
