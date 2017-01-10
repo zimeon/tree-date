@@ -11,7 +11,7 @@ import sys
 import time
 
 now = time.time()
-max_age = 365
+max_age = 60
 
 class Node(object):
 
@@ -104,10 +104,13 @@ def scan_dir(root, max_age=999999):
         #print("# %s %d" % (rel_path, path_age))
     return(root_node)
 
+def print_node(node):
+    #if (node.age < max_age):
+    print(str(node))
 
 def print_tree(root_node, prefix=''):
     """Pre-order print of tree."""
-    root_node.preorder(lambda n: print(prefix + str(n)))
+    root_node.preorder(print_node)
 
 
 def collapse_node(node):
@@ -126,8 +129,11 @@ ignore_files = [ 'Thumbs.db', '.DS_Store' ]
 for path in sys.argv[1:]:
     print("Scanning %s" % (path))
     root_node = scan_dir(path, max_age)
-    #print_tree(root_node)
-    root_node.postorder(collapse_node)
-    print("After collapsing less recently updated sub-dirs:\n")
-    print_tree(root_node)
+    if (root_node is None):
+        print("No included files in %s" % (path))
+    else:
+        #print_tree(root_node)
+        root_node.postorder(collapse_node)
+        print("After collapsing less recently updated sub-dirs (dirs with no changes in %d omitted):\n" % (max_age))
+        print_tree(root_node)
 
